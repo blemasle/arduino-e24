@@ -22,7 +22,6 @@ public:
 	byte read(unsigned short addr);
 	void read(unsigned short page, byte* data);
 
-	void write(byte value);
 	void write(unsigned short addr, byte value);
 	void write(unsigned short page, byte* data);
 };

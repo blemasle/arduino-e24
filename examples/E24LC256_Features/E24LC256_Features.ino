@@ -1,4 +1,5 @@
 #include <E24LC256.h>
+#include <Wire.h>
 
 void setup()
 {
