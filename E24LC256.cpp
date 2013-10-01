@@ -9,14 +9,91 @@ E24LC256::E24LC256(byte deviceAddr)
 
 E24LC256::~E24LC256() {}
 
-void E24LC256::burstWrite(unsigned short addr, byte* value, int length)
+int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
 {
+	unsigned short offset = 0;
+	byte pre = addr % E24LC256_PAGESIZE;
 
+	length -= pre;
+	unsigned short buffers = length / WRITE_BUFFERSIZE;
+	byte remain = length % WRITE_BUFFERSIZE;
+
+	Wire.beginTransmission(_deviceAddr);
+	Wire.beginTransmission(highByte(addr + offset));
+	Wire.beginTransmission(lowByte(addr + offset));
+
+	Wire.write(data, pre);
+	Wire.endTransmission();
+	offset += pre;
+
+	//wait until the full page is being written
+	delay(5);
+
+	//write n first full buffers
+	for(int i = 0; i < buffers; i++)
+	{
+		Wire.beginTransmission(_deviceAddr);
+		Wire.beginTransmission(highByte(addr + offset));
+		Wire.beginTransmission(lowByte(addr + offset));
+
+		Wire.write(data + offset, WRITE_BUFFERSIZE);
+		Wire.endTransmission();
+		offset += WRITE_BUFFERSIZE;
+
+		//wait until the full page is being written
+		delay(5);
+	}
+
+	//write additionnal content or initial content
+	//if length < WRITE_BUFFERSIZE
+	if(remain > 0) {
+		Wire.beginTransmission(_deviceAddr);
+		Wire.beginTransmission(highByte(addr + offset));
+		Wire.beginTransmission(lowByte(addr + offset));
+
+		Wire.write(data + buffers * WRITE_BUFFERSIZE, remain);
+		Wire.endTransmission();
+		offset += remain;
+
+		//wait until the full page is being written
+		delay(5);
+	}
+
+	return offset;
 }
 
-void E24LC256::burstRead(unsigned short addr, byte* value, int length)
+void E24LC256::burstRead(unsigned short addr, byte* data, int length)
 {
+	unsigned short buffers = length / READ_BUFFERSIZE;
+	byte remain = length % READ_BUFFERSIZE;
+	unsigned short offset = 0;
 
+	//write n first full buffers
+	for(int i = 0; i < buffers; i++)
+	{
+		Wire.beginTransmission(_deviceAddr);
+		Wire.beginTransmission(highByte(addr + offset));
+		Wire.beginTransmission(lowByte(addr + offset));
+		Wire.endTransmission();
+
+		Wire.requestFrom(_deviceAddr, READ_BUFFERSIZE);
+		while(Wire.available()) data[offset++] = Wire.read();
+		Wire.write(data + offset, READ_BUFFERSIZE);
+		
+		offset += READ_BUFFERSIZE;
+	}
+
+	//write additionnal content or initial content
+	//if length < READ_BUFFERSIZE
+	if(remain > 0) {
+		Wire.beginTransmission(_deviceAddr);
+		Wire.beginTransmission(highByte(addr + offset));
+		Wire.beginTransmission(lowByte(addr + offset));
+		Wire.endTransmission();
+
+		Wire.requestFrom(_deviceAddr, remain);
+		while(Wire.available()) data[offset++] = Wire.read();
+	}
 }
 
 byte E24LC256::read()
@@ -39,25 +116,26 @@ byte E24LC256::read(unsigned short addr)
 	return Wire.read();
 }
 
-void E24LC256::read(unsigned short page, byte* data)
+void E24LC256::read(unsigned short addr, byte* data, unsigned short length)
 {
-
+	burstRead(addr, data, length);
 }
 
-void E24LC256::write(unsigned short addr, byte value)
+void E24LC256::write(unsigned short addr, byte data)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
 	Wire.write(lowByte(addr));
-	Wire.write(value);
+	Wire.write(data);
 	Wire.endTransmission();
 
 	//wait until the full page is being written
 	delay(5);
 }
 
-void E24LC256::write(unsigned short page, byte* data)
+int E24LC256::write(unsigned short addr, byte* data, unsigned short length)
 {
-
+	if(addr + length > E24LC256_MAXADRESS) return -1;
+	return burstWrite(addr, data, length);
 }
 

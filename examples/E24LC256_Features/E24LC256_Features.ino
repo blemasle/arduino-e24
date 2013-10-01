@@ -9,14 +9,12 @@ void setup()
 	Wire.begin();
 	Serial.begin(115200);
 	randomSeed(123456789);
-}
 
-void loop()
-{
 	byte rand = (byte)random(0, 256);
 	byte value;
-	unsigned short addr = (unsigned short)random(65535);
+	unsigned short addr = (unsigned short)random(0x7FFF);
 
+	Serial.println("Testing single byte write/read...");
 	Serial.print("Sending ");
 	Serial.print(rand, HEX);
 	Serial.print(" to ");
@@ -46,4 +44,13 @@ void loop()
 	}
 
 	delay(3000);
+	
+	Serial.println("=====================================");
+	Serial.println("Testing arbitrary bytes write/read...");
+
+}
+
+void loop()
+{
+	
 }
