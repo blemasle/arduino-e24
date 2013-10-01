@@ -76,7 +76,7 @@ void E24LC256::burstRead(unsigned short addr, byte* data, int length)
 		Wire.beginTransmission(lowByte(addr + offset));
 		Wire.endTransmission();
 
-		Wire.requestFrom(_deviceAddr, READ_BUFFERSIZE);
+		Wire.requestFrom(_deviceAddr, (byte)READ_BUFFERSIZE);
 		while(Wire.available()) data[offset++] = Wire.read();
 		Wire.write(data + offset, READ_BUFFERSIZE);
 		

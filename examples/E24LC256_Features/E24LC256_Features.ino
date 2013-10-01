@@ -4,6 +4,23 @@
 #define E24LC256_ADDR 0x50
 E24LC256 e24lc = E24LC256(E24LC256_ADDR);
 
+void testReadValue(unsigned short addr, char assertValue)
+{
+	byte value = e24lc.read(addr);
+	Serial.print("Reading ");
+	Serial.print(addr);
+	Serial.print(" : ");
+	Serial.print((char)value);
+	if(value == assertValue)
+	{
+		Serial.println(", SUCCESS !");
+	}
+	else
+	{
+		Serial.println(", FAILED !");
+	}
+}
+
 void setup()
 {
 	Wire.begin();
@@ -47,7 +64,23 @@ void setup()
 	
 	Serial.println("=====================================");
 	Serial.println("Testing arbitrary bytes write/read...");
+	char str_data[]={"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nunc quam, rutrum ut nisl vitae, porta laoreet purus. Nunc eget lorem consequat, mollis magna quis, interdum erat cras amet.\n"};	
+	int len = strlen(str_data);
+	//char* str_read_data = (char*)malloc(len);
 
+	//addr = (unsigned short)random(0x7FFF);
+	addr = 136;
+	e24lc.write(addr, (byte*)str_data, len);
+	
+	for(int i = 0; i < len; i += 10)
+	{
+		testReadValue(addr + i, str_data[i]);
+	}
+
+	e24lc.read(addr, (byte*)str_data, len);
+
+	Serial.println("Read string value : ");
+	Serial.println(str_data);
 }
 
 void loop()
