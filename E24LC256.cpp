@@ -19,8 +19,8 @@ int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
 	byte remain = length % WRITE_BUFFERSIZE;
 
 	Wire.beginTransmission(_deviceAddr);
-	Wire.beginTransmission(highByte(addr + offset));
-	Wire.beginTransmission(lowByte(addr + offset));
+	Wire.write(highByte(addr + offset));
+	Wire.write(lowByte(addr + offset));
 
 	Wire.write(data, pre);
 	Wire.endTransmission();
@@ -33,8 +33,8 @@ int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
 	for(int i = 0; i < buffers; i++)
 	{
 		Wire.beginTransmission(_deviceAddr);
-		Wire.beginTransmission(highByte(addr + offset));
-		Wire.beginTransmission(lowByte(addr + offset));
+		Wire.write(highByte(addr + offset));
+		Wire.write(lowByte(addr + offset));
 
 		Wire.write(data + offset, WRITE_BUFFERSIZE);
 		Wire.endTransmission();
@@ -48,10 +48,10 @@ int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
 	//if length < WRITE_BUFFERSIZE
 	if(remain > 0) {
 		Wire.beginTransmission(_deviceAddr);
-		Wire.beginTransmission(highByte(addr + offset));
-		Wire.beginTransmission(lowByte(addr + offset));
+		Wire.write(highByte(addr + offset));
+		Wire.write(lowByte(addr + offset));
 
-		Wire.write(data + buffers * WRITE_BUFFERSIZE, remain);
+		Wire.write(data + offset, remain);
 		Wire.endTransmission();
 		offset += remain;
 
@@ -67,32 +67,49 @@ void E24LC256::burstRead(unsigned short addr, byte* data, int length)
 	unsigned short buffers = length / READ_BUFFERSIZE;
 	byte remain = length % READ_BUFFERSIZE;
 	unsigned short offset = 0;
+	byte val;
 
 	//write n first full buffers
 	for(int i = 0; i < buffers; i++)
 	{
+		Serial.print("Request ");
+		Serial.print(READ_BUFFERSIZE);
+		Serial.print(" from ");
+		Serial.println(addr + offset);
+
 		Wire.beginTransmission(_deviceAddr);
-		Wire.beginTransmission(highByte(addr + offset));
-		Wire.beginTransmission(lowByte(addr + offset));
+		Wire.write(highByte(addr + offset));
+		Wire.write(lowByte(addr + offset));
 		Wire.endTransmission();
 
 		Wire.requestFrom(_deviceAddr, (byte)READ_BUFFERSIZE);
-		while(Wire.available()) data[offset++] = Wire.read();
-		Wire.write(data + offset, READ_BUFFERSIZE);
-		
-		offset += READ_BUFFERSIZE;
+		while(Wire.available()) { 
+			val = Wire.read();
+			data[offset++] = val; 
+			Serial.println((char)val);
+		}
 	}
 
 	//write additionnal content or initial content
 	//if length < READ_BUFFERSIZE
 	if(remain > 0) {
+
+		Serial.print("Request ");
+		Serial.print(remain);
+		Serial.print(" from ");
+		Serial.println(addr + offset);
+
 		Wire.beginTransmission(_deviceAddr);
-		Wire.beginTransmission(highByte(addr + offset));
-		Wire.beginTransmission(lowByte(addr + offset));
+		Wire.write(highByte(addr + offset));
+		Wire.write(lowByte(addr + offset));
 		Wire.endTransmission();
 
 		Wire.requestFrom(_deviceAddr, remain);
-		while(Wire.available()) data[offset++] = Wire.read();
+		while(Wire.available()) { 
+			val = Wire.read();
+			data[offset++] = val; 
+			Serial.println((char)val);
+		}
 	}
 }
 
@@ -138,4 +155,5 @@ int E24LC256::write(unsigned short addr, byte* data, unsigned short length)
 	if(addr + length > E24LC256_MAXADRESS) return -1;
 	return burstWrite(addr, data, length);
 }
+
 
