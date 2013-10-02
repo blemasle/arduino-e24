@@ -18,17 +18,27 @@ class E24LC256
 {
 private:
 	int burstWrite(unsigned short addr, byte* data, int length);
-	void burstRead(unsigned short addr, byte* data, int length);
+	int burstRead(unsigned short addr, byte* data, int length);
 public:
 	E24LC256(byte addr);
 	~E24LC256();
 	
 	byte read();
 	byte read(unsigned short addr);
-	void read(unsigned short addr, byte* data, unsigned short length);
+	int read(unsigned short addr, byte* data, unsigned short length);
 
 	void write(unsigned short addr, byte data);
 	int write(unsigned short addr, byte* data, unsigned short length);
+
+	template <typename T> int readBlock(unsigned short addr, const T& data)
+	{
+		return read(addr, (byte*)&data, sizeof(T));
+	}
+
+	template <typename T> int writeBlock(unsigned short addr, const T& data)
+	{
+		return write(addr, (byte*)&data, sizeof(T));
+	}
 };
 
 #endif

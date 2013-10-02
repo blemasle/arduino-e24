@@ -1,3 +1,5 @@
+#include "E24LC256_Features.h"
+
 #include <E24LC256.h>
 #include <Wire.h>
 
@@ -21,6 +23,24 @@ bool testReadValue(unsigned short addr, char assertValue)
 		Serial.println(", FAILED !");
 		return false;
 	}
+}
+
+Config defaultConfig() {
+	Config c = {
+		"Test",
+		"1.24",
+		0,
+		16,
+		48,
+		3
+	};
+
+	for(int i = 0; i < 128; i++)
+	{
+		c.patches[i] = i;
+	}
+
+	return c;
 }
 
 void setup()
@@ -125,6 +145,71 @@ void setup()
 	}
 	success &= testReadValue(addr + len - 1, str_data[len - 1]);
 	success ? Serial.println("SUCCESS !") : Serial.println("FAILED !");
+
+	Serial.println("=====================================");
+	success = true;
+	Serial.println("Writing data block mode...");
+	Serial.println("Erasing data...");
+	for(int i = 0; i < len; i++)
+	{
+		e24lc.write(addr + i, 0);
+	}
+	Config c = defaultConfig();
+	e24lc.writeBlock(addr, c);
+	Config c2;// = defaultConfig();
+	e24lc.readBlock(addr, c2);
+	Serial.println("==========Original value : ");
+	Serial.print("lastUsedPatch : "); Serial.println(c.lastUsedPatch);
+	Serial.print("lcdContrast : ");Serial.println(c.lcdContrast);
+	Serial.print("rxChannel : ");Serial.println(c.rxChannel);
+	Serial.print("txChannel : ");Serial.println(c.txChannel);
+	Serial.print("version : ");Serial.println(c.version);
+	Serial.print("seed : ");Serial.println(c.seed);
+	
+	Serial.println("==========Read value : ");
+	Serial.print("lastUsedPatch : "); Serial.println(c2.lastUsedPatch);
+	Serial.print("lcdContrast : ");Serial.println(c2.lcdContrast);
+	Serial.print("rxChannel : ");Serial.println(c2.rxChannel);
+	Serial.print("txChannel : ");Serial.println(c2.txChannel);
+	Serial.print("version : ");Serial.println(c2.version);
+	Serial.print("seed : ");Serial.println(c2.seed);
+
+	success &= c.lastUsedPatch == c2.lastUsedPatch &&
+		c.lcdContrast == c2.lcdContrast &&
+		c.rxChannel == c2.rxChannel &&
+		c.txChannel == c2.txChannel;
+
+	len = strlen(c.seed);
+	int len2 = strlen(c2.seed);
+
+	success &= len == len2;
+	if(success)
+	{
+		for(int i = 0; i < len; i++)
+		{
+			success &= c.seed[i] == c2.seed[i];
+		}
+	}
+
+	len = strlen(c.version);
+	len2 = strlen(c2.version);
+	success &= len == len2;
+	if(success)
+	{
+		for(int i = 0; i < len; i++)
+		{
+			success &= c.version[i] == c2.version[i];
+		}
+	}
+
+	
+	for(int i = 0; i < 128; i++)
+	{
+		success &= c.patches[i] == c2.patches[i];
+	}
+
+	success ? Serial.println("SUCCESS !") : Serial.println("FAILED !");
+	
 }
 
 void loop()
