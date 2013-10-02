@@ -72,44 +72,25 @@ void E24LC256::burstRead(unsigned short addr, byte* data, int length)
 	//write n first full buffers
 	for(int i = 0; i < buffers; i++)
 	{
-		Serial.print("Request ");
-		Serial.print(READ_BUFFERSIZE);
-		Serial.print(" from ");
-		Serial.println(addr + offset);
-
 		Wire.beginTransmission(_deviceAddr);
 		Wire.write(highByte(addr + offset));
 		Wire.write(lowByte(addr + offset));
 		Wire.endTransmission();
 
 		Wire.requestFrom(_deviceAddr, (byte)READ_BUFFERSIZE);
-		while(Wire.available()) { 
-			val = Wire.read();
-			data[offset++] = val; 
-			Serial.println((char)val);
-		}
+		while(Wire.available()) data[offset++] = Wire.read();
 	}
 
 	//write additionnal content or initial content
 	//if length < READ_BUFFERSIZE
 	if(remain > 0) {
-
-		Serial.print("Request ");
-		Serial.print(remain);
-		Serial.print(" from ");
-		Serial.println(addr + offset);
-
 		Wire.beginTransmission(_deviceAddr);
 		Wire.write(highByte(addr + offset));
 		Wire.write(lowByte(addr + offset));
 		Wire.endTransmission();
 
 		Wire.requestFrom(_deviceAddr, remain);
-		while(Wire.available()) { 
-			val = Wire.read();
-			data[offset++] = val; 
-			Serial.println((char)val);
-		}
+		while(Wire.available()) data[offset++] = Wire.read();
 	}
 }
 

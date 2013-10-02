@@ -61,13 +61,11 @@ void setup()
 	{
 		Serial.println(", FAILED !");
 	}
-
-	delay(3000);
 	
 	Serial.println("=====================================");
 	Serial.println("Testing arbitrary bytes write/read...");
 	char str_data[]={"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nunc quam, rutrum ut nisl vitae, porta laoreet purus. Nunc eget lorem consequat, mollis magna quis, interdum erat cras amet."};	
-	char read_data[187];
+	char read_data[188];
 
 	int len = strlen(str_data);
 	Serial.print("Test string length : ");
@@ -77,17 +75,19 @@ void setup()
 	//char* str_read_data = (char*)malloc(len);
 	addr = 136;
 
-	Serial.println("Writing data with one byte at a time...");
+	Serial.println("Writing data one byte at a time...");
 	Serial.println("Erasing data...");
 	for(int i = 0; i < len; i++)
 	{
 		e24lc.write(addr + i, 0);
 	}
+
 	for(int i = 0; i < len; i++)
 	{
 		e24lc.write(addr + i, (byte)str_data[i]);
 	}
 	e24lc.read(addr, (byte*)read_data, len);
+	read_data[187] = '\0';
 
 	Serial.println("Original string value : ");
 	Serial.println(str_data);
@@ -101,6 +101,7 @@ void setup()
 	success &= testReadValue(addr + len - 1, str_data[len - 1]);
 	success ? Serial.println("SUCCESS !") : Serial.println("FAILED !");
 	
+	Serial.println("=====================================");
 	success = true;
 	Serial.println("Writing data in sequential mode...");
 	Serial.println("Erasing data...");
@@ -111,6 +112,7 @@ void setup()
 
 	e24lc.write(addr, (byte*)str_data, len);
 	e24lc.read(addr, (byte*)read_data, len);
+	read_data[187] = '\0';
 
 	Serial.println("Original string value : ");
 	Serial.println(str_data);
