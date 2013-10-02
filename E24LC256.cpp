@@ -9,6 +9,36 @@ E24LC256::E24LC256(byte deviceAddr)
 
 E24LC256::~E24LC256() {}
 
+int internalWrite(unsigned short addr, byte* data, byte length)
+{
+	Wire.beginTransmission(_deviceAddr);
+	Wire.write(highByte(addr));
+	Wire.write(lowByte(addr));
+
+	Wire.write(data, length);
+	Wire.endTransmission();
+	
+	//wait until the full page is being written
+	delay(5);
+
+	return length;
+}
+
+int internalRead(unsigned short addr, byte* data, byte length)
+{
+	byte offset = 0;
+
+	Wire.beginTransmission(_deviceAddr);
+	Wire.write(highByte(addr));
+	Wire.write(lowByte(addr));
+	Wire.endTransmission();
+
+	Wire.requestFrom(_deviceAddr, length);
+	while(Wire.available()) data[offset++] = Wire.read();
+
+	return offset;
+}
+
 int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
 {
 	unsigned short offset = 0;
@@ -18,45 +48,18 @@ int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
 	unsigned short buffers = length / WRITE_BUFFERSIZE;
 	byte remain = length % WRITE_BUFFERSIZE;
 
-	Wire.beginTransmission(_deviceAddr);
-	Wire.write(highByte(addr + offset));
-	Wire.write(lowByte(addr + offset));
-
-	Wire.write(data, pre);
-	Wire.endTransmission();
-	offset += pre;
-
-	//wait until the full page is being written
-	delay(5);
+	offset += internalWrite(addr + offset, data + offset, pre);
 
 	//write n first full buffers
 	for(int i = 0; i < buffers; i++)
 	{
-		Wire.beginTransmission(_deviceAddr);
-		Wire.write(highByte(addr + offset));
-		Wire.write(lowByte(addr + offset));
-
-		Wire.write(data + offset, WRITE_BUFFERSIZE);
-		Wire.endTransmission();
-		offset += WRITE_BUFFERSIZE;
-
-		//wait until the full page is being written
-		delay(5);
+		offset += internalWrite(addr + offset, data + offset, WRITE_BUFFERSIZE);
 	}
 
 	//write additionnal content or initial content
 	//if length < WRITE_BUFFERSIZE
 	if(remain > 0) {
-		Wire.beginTransmission(_deviceAddr);
-		Wire.write(highByte(addr + offset));
-		Wire.write(lowByte(addr + offset));
-
-		Wire.write(data + offset, remain);
-		Wire.endTransmission();
-		offset += remain;
-
-		//wait until the full page is being written
-		delay(5);
+		offset += internalWrite(addr + offset, data + offset, remain);
 	}
 
 	return offset;
@@ -72,25 +75,13 @@ void E24LC256::burstRead(unsigned short addr, byte* data, int length)
 	//write n first full buffers
 	for(int i = 0; i < buffers; i++)
 	{
-		Wire.beginTransmission(_deviceAddr);
-		Wire.write(highByte(addr + offset));
-		Wire.write(lowByte(addr + offset));
-		Wire.endTransmission();
-
-		Wire.requestFrom(_deviceAddr, (byte)READ_BUFFERSIZE);
-		while(Wire.available()) data[offset++] = Wire.read();
+		offset += internalRead(addr + offset, data, READ_BUFFERSIZE);
 	}
 
 	//write additionnal content or initial content
 	//if length < READ_BUFFERSIZE
 	if(remain > 0) {
-		Wire.beginTransmission(_deviceAddr);
-		Wire.write(highByte(addr + offset));
-		Wire.write(lowByte(addr + offset));
-		Wire.endTransmission();
-
-		Wire.requestFrom(_deviceAddr, remain);
-		while(Wire.available()) data[offset++] = Wire.read();
+		offset += internalRead(addr + offset, data, remain);
 	}
 }
 
