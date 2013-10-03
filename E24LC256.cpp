@@ -41,8 +41,10 @@ int internalRead(unsigned short addr, byte* data, byte length)
 
 int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
 {
+	if(addr + length - 1 > E24LC256_MAXADRESS) return -1;
+
 	unsigned short offset = 0;
-	byte pre = addr % E24LC256_PAGESIZE;
+	byte pre = length < E24LC256_PAGESIZE ? length : addr % E24LC256_PAGESIZE;
 
 	length -= pre;
 	unsigned short buffers = length / WRITE_BUFFERSIZE;
@@ -126,7 +128,6 @@ void E24LC256::write(unsigned short addr, byte data)
 
 int E24LC256::write(unsigned short addr, byte* data, unsigned short length)
 {
-	if(addr + length > E24LC256_MAXADRESS) return -1;
 	return burstWrite(addr, data, length);
 }
 
