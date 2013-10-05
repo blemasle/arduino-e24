@@ -78,7 +78,8 @@ bool testString()
 	Serial.println(len);
 
 	bool success = true;
-	unsigned short addr = (unsigned short)random(0x7F00);
+	unsigned short addr = 129;
+//	unsigned short addr = (unsigned short)random(0x7F00);
 
 	Serial.println("Writing data one byte at a time...");
 	Serial.println("Erasing data...");
@@ -270,17 +271,6 @@ bool testSize()
 		success &= false;
 	}
 
-	if(e24lc.write(addr, data, 1) == 1)
-	{
-		Serial.println("Last address write : SUCCESS !");
-		success &= true;
-	}
-	else
-	{
-		Serial.println("Last address write : FAILED !");
-		success &= false;
-	}
-
 	if(e24lc.write(addr-20, data, 10) == 10)
 	{
 		Serial.println("Less than one page write : SUCCESS !");
@@ -289,6 +279,17 @@ bool testSize()
 	else
 	{
 		Serial.println("Less than one page write : FAILED !");
+		success &= false;
+	}
+
+	if(e24lc.write(addr, data, 1) == 1)
+	{
+		Serial.println("Last address write : SUCCESS !");
+		success &= true;
+	}
+	else
+	{
+		Serial.println("Last address write : FAILED !");
 		success &= false;
 	}
 
@@ -301,7 +302,8 @@ void setup()
 	Serial.begin(115200);
 	randomSeed(123456789);
 	
-	bool success = testSingleByte();
+	bool success = true;
+	//success &= testSingleByte();
 	success &= testString();
 	success &= testBlock();
 	success &= testSize();

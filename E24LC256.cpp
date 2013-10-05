@@ -16,15 +16,15 @@ int internalWrite(unsigned short addr, byte* data, byte length)
 	Wire.write(lowByte(addr));
 
 	Wire.write(data, length);
-	Wire.endTransmission();
-	
+	byte r = Wire.endTransmission();
+
 	//wait until the full page is being written
 	delay(5);
 
 	return length;
 }
 
-int internalRead(unsigned short addr, byte* data, byte length)
+int internalRead(unsigned short addr, byte* data, unsigned short length)
 {
 	byte offset = 0;
 
@@ -39,52 +39,42 @@ int internalRead(unsigned short addr, byte* data, byte length)
 	return offset;
 }
 
-int E24LC256::burstWrite(unsigned short addr, byte* data, int length)
+int E24LC256::burstWrite(unsigned short addr, byte* data, unsigned short length)
 {
 	if(addr + length - 1 > E24LC256_MAXADRESS) return -1;
 
 	unsigned short offset = 0;
-	byte pre = length < E24LC256_PAGESIZE ? length : addr % E24LC256_PAGESIZE;
+	byte bSize = 0;
 
-	length -= pre;
-	unsigned short buffers = length / WRITE_BUFFERSIZE;
-	byte remain = length % WRITE_BUFFERSIZE;
+	do {
+		//compute the next buffer size using nextPageAddress - addr
+		bSize = ((addr + E24LC256_PAGESIZE) & ~(E24LC256_PAGESIZE - 1)) - addr;
+		//avoid to overflow content length & max write buffer size
+		bSize = min(min(WRITE_BUFFERSIZE, bSize), length);
 
-	offset += internalWrite(addr + offset, data + offset, pre);
+		length -= internalWrite(addr, data + offset, bSize);
+		addr += bSize;
+		offset += bSize;
 
-	//write n first full buffers
-	for(int i = 0; i < buffers; i++)
-	{
-		offset += internalWrite(addr + offset, data + offset, WRITE_BUFFERSIZE);
-	}
-
-	//write additionnal content or initial content
-	//if length < WRITE_BUFFERSIZE
-	if(remain > 0) {
-		offset += internalWrite(addr + offset, data + offset, remain);
-	}
+	}while(length > 0);
 
 	return offset;
 }
 
-int E24LC256::burstRead(unsigned short addr, byte* data, int length)
+int E24LC256::burstRead(unsigned short addr, byte* data, unsigned short length)
 {
-	unsigned short buffers = length / READ_BUFFERSIZE;
-	byte remain = length % READ_BUFFERSIZE;
 	unsigned short offset = 0;
-	byte val;
+	byte bSize = 0;
 
-	//write n first full buffers
-	for(int i = 0; i < buffers; i++)
-	{
-		offset += internalRead(addr + offset, data + offset, READ_BUFFERSIZE);
-	}
+	do {
+		//avoid to overflow max read buffer size
+		bSize = min(READ_BUFFERSIZE, length);
 
-	//write additionnal content or initial content
-	//if length < READ_BUFFERSIZE
-	if(remain > 0) {
-		offset += internalRead(addr + offset, data + offset, remain);
-	}
+		length -= internalRead(addr, data + offset, bSize);
+		addr += bSize;
+		offset += bSize;
+
+	}while(length > 0);
 
 	return offset;
 }

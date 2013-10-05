@@ -11,14 +11,14 @@
 #define E24LC256_ADDR		0x50
 #define E24LC256_MAXADRESS	0x7FFF
 #define E24LC256_PAGESIZE	64
-#define WRITE_BUFFERSIZE	16
+#define WRITE_BUFFERSIZE	30
 #define READ_BUFFERSIZE		30
 
 class E24LC256
 {
 private:
-	int burstWrite(unsigned short addr, byte* data, int length);
-	int burstRead(unsigned short addr, byte* data, int length);
+	int burstWrite(unsigned short addr, byte* data, unsigned short length);
+	int burstRead(unsigned short addr, byte* data, unsigned short length);
 public:
 	E24LC256(byte addr);
 	~E24LC256();
