@@ -1,7 +1,5 @@
 #include "E24LC256.h"
 
-byte _deviceAddr;
-
 E24LC256::E24LC256(byte deviceAddr)
 {
 	_deviceAddr = deviceAddr;
@@ -9,7 +7,7 @@ E24LC256::E24LC256(byte deviceAddr)
 
 E24LC256::~E24LC256() {}
 
-int internalWrite(unsigned short addr, byte* data, byte length)
+int E24LC256::internalWrite(unsigned short addr, byte* data, byte length)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -24,7 +22,7 @@ int internalWrite(unsigned short addr, byte* data, byte length)
 	return length;
 }
 
-int internalRead(unsigned short addr, byte* data, unsigned short length)
+int E24LC256::internalRead(unsigned short addr, byte* data, unsigned short length)
 {
 	byte offset = 0;
 

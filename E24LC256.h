@@ -17,6 +17,9 @@
 class E24LC256
 {
 private:
+	byte _deviceAddr;
+	int internalWrite(unsigned short addr, byte* data, byte length);
+	int internalRead(unsigned short addr, byte* data, unsigned short length);
 	int burstWrite(unsigned short addr, byte* data, unsigned short length);
 	int burstRead(unsigned short addr, byte* data, unsigned short length);
 public:
