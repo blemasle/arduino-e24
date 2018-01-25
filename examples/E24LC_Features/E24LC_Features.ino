@@ -1,10 +1,10 @@
-#include "E24LC256_Features.h"
+#include "E24LC_Features.h"
 
-#include <E24LC256.h>
+#include <E24LC.h>
 #include <Wire.h>
 
-#define E24LC256_ADDR 0x50
-E24LC256 e24lc = E24LC256(E24LC256_ADDR);
+#define E24LC_ADDR 0x50
+E24LC e24lc = E24LC(E24LC_ADDR);
 
 bool testChar(unsigned short addr, char assertValue)
 {
@@ -257,7 +257,7 @@ bool testBlock()
 
 bool testSize()
 {
-	unsigned short addr = E24LC256_MAXADRESS;
+	unsigned short addr = E24LC_MAXADRESS;
 	byte data[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	bool success = true;
 	if(e24lc.write(addr, data, 2) == -1)
