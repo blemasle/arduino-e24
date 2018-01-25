@@ -1,16 +1,11 @@
-#ifndef _E24LC_h
-#define _E24LC_h
+#pragma once
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
+#include <Arduino.h>
 #include <Wire.h>
 
-#define E24LC_ADDR		0x50
-#define E24LC_MAXADRESS	0x7FFF
-#define E24LC_PAGESIZE	64
+#define E24LC_ADDR			0x50
+#define E24LC_MAXADRESS		0x7FFF
+#define E24LC_PAGESIZE		64
 #define WRITE_BUFFERSIZE	30
 #define READ_BUFFERSIZE		30
 
@@ -43,5 +38,3 @@ public:
 		return write(addr, (byte*)&data, sizeof(T));
 	}
 };
-
-#endif
