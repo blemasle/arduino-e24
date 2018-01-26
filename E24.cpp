@@ -1,13 +1,13 @@
-#include "E24LC.h"
+#include "E24.h"
 
-E24LC::E24LC(byte deviceAddr)
+E24::E24(byte deviceAddr)
 {
 	_deviceAddr = deviceAddr;
 }
 
-E24LC::~E24LC() {}
+E24::~E24() {}
 
-int E24LC::internalWrite(unsigned short addr, byte* data, byte length)
+int E24::internalWrite(unsigned short addr, byte* data, byte length)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -22,7 +22,7 @@ int E24LC::internalWrite(unsigned short addr, byte* data, byte length)
 	return length;
 }
 
-int E24LC::internalRead(unsigned short addr, byte* data, unsigned short length)
+int E24::internalRead(unsigned short addr, byte* data, unsigned short length)
 {
 	byte offset = 0;
 
@@ -37,16 +37,16 @@ int E24LC::internalRead(unsigned short addr, byte* data, unsigned short length)
 	return offset;
 }
 
-int E24LC::burstWrite(unsigned short addr, byte* data, unsigned short length)
+int E24::burstWrite(unsigned short addr, byte* data, unsigned short length)
 {
-	if(addr + length - 1 > E24LC_MAXADRESS) return -1;
+	if(addr + length - 1 > E24_MAXADRESS) return -1;
 
 	unsigned short offset = 0;
 	byte bSize = 0;
 
 	do {
 		//compute the next buffer size using nextPageAddress - addr
-		bSize = ((addr + E24LC_PAGESIZE) & ~(E24LC_PAGESIZE - 1)) - addr;
+		bSize = ((addr + E24_PAGESIZE) & ~(E24_PAGESIZE - 1)) - addr;
 		//avoid to overflow content length & max write buffer size
 		bSize = min(min(WRITE_BUFFERSIZE, bSize), length);
 
@@ -59,7 +59,7 @@ int E24LC::burstWrite(unsigned short addr, byte* data, unsigned short length)
 	return offset;
 }
 
-int E24LC::burstRead(unsigned short addr, byte* data, unsigned short length)
+int E24::burstRead(unsigned short addr, byte* data, unsigned short length)
 {
 	unsigned short offset = 0;
 	byte bSize = 0;
@@ -77,7 +77,7 @@ int E24LC::burstRead(unsigned short addr, byte* data, unsigned short length)
 	return offset;
 }
 
-byte E24LC::read()
+byte E24::read()
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.endTransmission();
@@ -86,7 +86,7 @@ byte E24LC::read()
 	return Wire.read();
 }
 
-byte E24LC::read(unsigned short addr)
+byte E24::read(unsigned short addr)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -97,12 +97,12 @@ byte E24LC::read(unsigned short addr)
 	return Wire.read();
 }
 
-int E24LC::read(unsigned short addr, byte* data, unsigned short length)
+int E24::read(unsigned short addr, byte* data, unsigned short length)
 {
 	return burstRead(addr, data, length);
 }
 
-void E24LC::write(unsigned short addr, byte data)
+void E24::write(unsigned short addr, byte data)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -114,7 +114,7 @@ void E24LC::write(unsigned short addr, byte data)
 	delay(5);
 }
 
-int E24LC::write(unsigned short addr, byte* data, unsigned short length)
+int E24::write(unsigned short addr, byte* data, unsigned short length)
 {
 	return burstWrite(addr, data, length);
 }

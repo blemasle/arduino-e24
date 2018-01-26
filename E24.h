@@ -3,13 +3,13 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#define E24LC_ADDR			0x50
-#define E24LC_MAXADRESS		0x7FFF
-#define E24LC_PAGESIZE		64
+#define E24_ADDR			0x50
+#define E24_MAXADRESS		0x7FFF
+#define E24_PAGESIZE		64
 #define WRITE_BUFFERSIZE	30
 #define READ_BUFFERSIZE		30
 
-class E24LC
+class E24
 {
 private:
 	byte _deviceAddr;
@@ -18,8 +18,8 @@ private:
 	int burstWrite(unsigned short addr, byte* data, unsigned short length);
 	int burstRead(unsigned short addr, byte* data, unsigned short length);
 public:
-	E24LC(byte addr);
-	~E24LC();
+	E24(byte addr);
+	~E24();
 	
 	byte read();
 	byte read(unsigned short addr);
