@@ -4,11 +4,11 @@
 #include <Wire.h>
 
 #define E24_ADDR 0x50
-E24 E24 = E24(E24_ADDR);
+E24 e24 = E24(E24_ADDR);
 
 bool testChar(unsigned short addr, char assertValue)
 {
-	byte value = E24.read(addr);
+	byte value = e24.read(addr);
 	Serial.print("Reading ");
 	Serial.print(addr);
 	Serial.print(" : ");
@@ -42,14 +42,14 @@ bool testSingleByte()
 	Serial.println("...");
 	Serial.println("=====================================");
 
-	E24.write(addr, rand);
+	e24.write(addr, rand);
 
 	Serial.println("Data sent.");
 
 	Serial.print("Reading ");
 	Serial.print(addr, HEX);
 
-	value = E24.read(addr);
+	value = e24.read(addr);
 	//value = rand;
 
 	Serial.print(" : ");
@@ -85,18 +85,18 @@ bool testString()
 	Serial.println("Erasing data...");
 	for(int i = 0; i < len; i++)
 	{
-		E24.write(addr + i, 0);
+		e24.write(addr + i, 0);
 	}
 	Serial.println("Data erased.");
 	Serial.println("Writing data.");
 	for(int i = 0; i < len; i++)
 	{
-		E24.write(addr + i, (byte)str_data[i]);
+		e24.write(addr + i, (byte)str_data[i]);
 	}
 	
 	Serial.println("Data written.");
 	Serial.println("Reading written data.");
-	E24.read(addr, (byte*)read_data, len);
+	e24.read(addr, (byte*)read_data, len);
 	read_data[187] = '\0';
 
 	Serial.println("Data read.");
@@ -120,16 +120,16 @@ bool testString()
 	Serial.println("Erasing data...");
 	for(int i = 0; i < len; i++)
 	{
-		E24.write(addr + i, 0);
+		e24.write(addr + i, 0);
 	}
 
 	Serial.println("=====================================");
 	Serial.println("Data erased.");
 	Serial.println("Writing data.");
-	E24.write(addr, (byte*)str_data, len);
+	e24.write(addr, (byte*)str_data, len);
 	Serial.println("Data written.");
 	Serial.println("Reading written data.");
-	E24.read(addr, (byte*)read_data, len);
+	e24.read(addr, (byte*)read_data, len);
 	Serial.println("Data read.");
 	read_data[187] = '\0';
 	Serial.println("Original string value : ");
@@ -181,15 +181,15 @@ bool testBlock()
 	Serial.println("=====================================");
 	for(int i = 0; i < len; i++)
 	{
-		E24.write(addr + i, 0);
+		e24.write(addr + i, 0);
 	}
 	Serial.println("Data erased.");
 	Serial.println("Writing data.");
-	E24.writeBlock(addr, c);
+	e24.writeBlock(addr, c);
 	Serial.println("Data written.");
 	Serial.println("Reading written data.");
 	Serial.println("=====================================");
-	E24.readBlock(addr, c2);
+	e24.readBlock(addr, c2);
 	Serial.println("Original value : ");
 	Serial.println("=====================================");
 	Serial.print("lastUsedPatch : "); Serial.println(c.lastUsedPatch);
@@ -260,7 +260,7 @@ bool testSize()
 	unsigned short addr = E24_MAXADRESS;
 	byte data[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	bool success = true;
-	if(E24.write(addr, data, 2) == -1)
+	if(e24.write(addr, data, 2) == -1)
 	{
 		Serial.println("Overflow protection : SUCCESS !");
 		success &= true;
@@ -271,7 +271,7 @@ bool testSize()
 		success &= false;
 	}
 
-	if(E24.write(addr-20, data, 10) == 10)
+	if(e24.write(addr-20, data, 10) == 10)
 	{
 		Serial.println("Less than one page write : SUCCESS !");
 		success &= true;
@@ -282,7 +282,7 @@ bool testSize()
 		success &= false;
 	}
 
-	if(E24.write(addr, data, 1) == 1)
+	if(e24.write(addr, data, 1) == 1)
 	{
 		Serial.println("Last address write : SUCCESS !");
 		success &= true;

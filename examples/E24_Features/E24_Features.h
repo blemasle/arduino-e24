@@ -1,9 +1,4 @@
-#if ARDUINO >= 100
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#endif
-
 
 struct Config {
 	char seed[5]; //config check, must always be : CONFIG_SEED. If not, config will be rewriten from scratch
