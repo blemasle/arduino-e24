@@ -7,14 +7,14 @@ E24::E24(E24Size_t size, uint8_t deviceAddr)
 
 E24::~E24() {}
 
-int E24::internalWrite(unsigned short addr, byte* data, byte length)
+int E24::internalWrite(uint16_t addr, uint8_t* data, uint8_t length)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
 	Wire.write(lowByte(addr));
 
 	Wire.write(data, length);
-	byte r = Wire.endTransmission();
+	uint8_t r = Wire.endTransmission();
 
 	//wait until the full page is being written
 	delay(5);
@@ -22,9 +22,9 @@ int E24::internalWrite(unsigned short addr, byte* data, byte length)
 	return length;
 }
 
-int E24::internalRead(unsigned short addr, byte* data, unsigned short length)
+int E24::internalRead(uint16_t addr, uint8_t* data, uint16_t length)
 {
-	byte offset = 0;
+	uint8_t offset = 0;
 
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -37,7 +37,7 @@ int E24::internalRead(unsigned short addr, byte* data, unsigned short length)
 	return offset;
 }
 
-int E24::burstWrite(unsigned short addr, byte* data, unsigned short length)
+int E24::burstWrite(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	if(addr + length - 1 > E24_MAXADDRESS) return -1;
 
@@ -60,10 +60,10 @@ int E24::burstWrite(unsigned short addr, byte* data, unsigned short length)
 	return offset;
 }
 
-int E24::burstRead(unsigned short addr, byte* data, unsigned short length)
+int E24::burstRead(uint16_t addr, uint8_t* data, uint16_t length)
 {
-	unsigned short offset = 0;
-	byte bSize = 0;
+	uint16_t offset = 0;
+	uint8_t bSize = 0;
 
 	do {
 		//avoid to overflow max read buffer size
@@ -78,32 +78,32 @@ int E24::burstRead(unsigned short addr, byte* data, unsigned short length)
 	return offset;
 }
 
-byte E24::read()
+uint8_t E24::read()
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.endTransmission();
-	Wire.requestFrom(_deviceAddr, (byte)1);
+	Wire.requestFrom(_deviceAddr, (uint8_t)1);
 	
 	return Wire.read();
 }
 
-byte E24::read(unsigned short addr)
+uint8_t E24::read(uint16_t addr)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
 	Wire.write(lowByte(addr));
 	Wire.endTransmission();
-	Wire.requestFrom(_deviceAddr, (byte)1);
+	Wire.requestFrom(_deviceAddr, (uint8_t)1);
 
 	return Wire.read();
 }
 
-int E24::read(unsigned short addr, byte* data, unsigned short length)
+int E24::read(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	return burstRead(addr, data, length);
 }
 
-void E24::write(unsigned short addr, byte data)
+void E24::write(uint16_t addr, uint8_t data)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -115,7 +115,7 @@ void E24::write(unsigned short addr, byte data)
 	delay(5);
 }
 
-int E24::write(unsigned short addr, byte* data, unsigned short length)
+int E24::write(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	return burstWrite(addr, data, length);
 }

@@ -24,30 +24,31 @@ enum class E24Size_t : uint8_t
 class E24
 {
 private:
-	int internalWrite(unsigned short addr, byte* data, byte length);
-	int internalRead(unsigned short addr, byte* data, unsigned short length);
-	int burstWrite(unsigned short addr, byte* data, unsigned short length);
-	int burstRead(unsigned short addr, byte* data, unsigned short length);
 	uint8_t _deviceAddr;
 	E24Size_t _size;
+
+	int internalWrite(uint16_t addr, uint8_t* data, uint8_t length);
+	int internalRead(uint16_t addr, uint8_t* data, uint16_t length);
+	int burstWrite(uint16_t addr, uint8_t* data, uint16_t length);
+	int burstRead(uint16_t addr, uint8_t* data, uint16_t length);
 public:
 	E24(E24Size_t size, uint8_t addr);
 	~E24();
 	
-	byte read();
-	byte read(unsigned short addr);
-	int read(unsigned short addr, byte* data, unsigned short length);
+	uint8_t read();
+	uint8_t read(uint16_t addr);
+	int read(uint16_t addr, uint8_t* data, uint16_t length);
 
-	void write(unsigned short addr, byte data);
-	int write(unsigned short addr, byte* data, unsigned short length);
+	void write(uint16_t addr, uint8_t data);
+	int write(uint16_t addr, uint8_t* data, uint16_t length);
 
-	template <typename T> int readBlock(unsigned short addr, const T& data)
+	template <typename T> int readBlock(uint16_t addr, const T& data)
 	{
-		return read(addr, (byte*)&data, sizeof(T));
+		return read(addr, (uint8_t*)&data, sizeof(T));
 	}
 
-	template <typename T> int writeBlock(unsigned short addr, const T& data)
+	template <typename T> int writeBlock(uint16_t addr, const T& data)
 	{
-		return write(addr, (byte*)&data, sizeof(T));
+		return write(addr, (uint8_t*)&data, sizeof(T));
 	}
 };
