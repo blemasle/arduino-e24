@@ -49,7 +49,7 @@ int E24::burstWrite(uint16_t addr, uint8_t* data, uint16_t length)
 		//compute the next buffer size using nextPageAddress - addr
 		bSize = ((addr + pageSize) & ~(pageSize - 1)) - addr;
 		//avoid to overflow content length & max write buffer size
-		bSize = min(min(WRITE_BUFFERSIZE, bSize), length);
+		bSize = min(min(pageSize, bSize), length);
 
 		length -= internalWrite(addr, data + offset, bSize);
 		addr += bSize;
@@ -62,12 +62,13 @@ int E24::burstWrite(uint16_t addr, uint8_t* data, uint16_t length)
 
 int E24::burstRead(uint16_t addr, uint8_t* data, uint16_t length)
 {
+	uint8_t pageSize = E24_PAGESIZE;
 	uint16_t offset = 0;
 	uint8_t bSize = 0;
 
 	do {
 		//avoid to overflow max read buffer size
-		bSize = min(READ_BUFFERSIZE, length);
+		bSize = min(pageSize, length);
 
 		length -= internalRead(addr, data + offset, bSize);
 		addr += bSize;
