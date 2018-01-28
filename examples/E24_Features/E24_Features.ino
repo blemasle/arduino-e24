@@ -4,7 +4,7 @@
 #include <Wire.h>
 
 #define E24_ADDR 0x50
-E24 e24 = E24(E24_ADDR);
+E24 e24 = E24(E24Size_t::E24_256K, E24_ADDR);
 
 bool testChar(unsigned short addr, char assertValue)
 {

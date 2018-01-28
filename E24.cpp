@@ -1,6 +1,6 @@
 #include "E24.h"
 
-E24::E24(byte deviceAddr)
+E24::E24(E24Size_t size, uint8_t deviceAddr)
 {
 	_deviceAddr = deviceAddr;
 }
@@ -39,14 +39,15 @@ int E24::internalRead(unsigned short addr, byte* data, unsigned short length)
 
 int E24::burstWrite(unsigned short addr, byte* data, unsigned short length)
 {
-	if(addr + length - 1 > E24_MAXADRESS) return -1;
+	if(addr + length - 1 > E24_MAXADDRESS) return -1;
 
-	unsigned short offset = 0;
-	byte bSize = 0;
+	uint8_t pageSize = E24_PAGESIZE;
+	uint16_t offset = 0;
+	uint8_t bSize = 0;
 
 	do {
 		//compute the next buffer size using nextPageAddress - addr
-		bSize = ((addr + E24_PAGESIZE) & ~(E24_PAGESIZE - 1)) - addr;
+		bSize = ((addr + pageSize) & ~(pageSize - 1)) - addr;
 		//avoid to overflow content length & max write buffer size
 		bSize = min(min(WRITE_BUFFERSIZE, bSize), length);
 
