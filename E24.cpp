@@ -15,7 +15,7 @@ E24::E24(E24Size_t size, uint8_t deviceAddr)
 
 E24::~E24() {}
 
-int E24::internalWrite(uint16_t addr, uint8_t* data, uint8_t length)
+int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint8_t length)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -30,7 +30,7 @@ int E24::internalWrite(uint16_t addr, uint8_t* data, uint8_t length)
 	return length;
 }
 
-int E24::internalRead(uint16_t addr, uint8_t* data, uint16_t length)
+int E24::sequentialRead(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	uint8_t offset = 0;
 
@@ -41,48 +41,6 @@ int E24::internalRead(uint16_t addr, uint8_t* data, uint16_t length)
 
 	Wire.requestFrom(_deviceAddr, length);
 	while(Wire.available()) data[offset++] = Wire.read();
-
-	return offset;
-}
-
-int E24::burstWrite(uint16_t addr, uint8_t* data, uint16_t length)
-{
-	if(addr + length - 1 > E24_MAX_ADDRESS) return -1;
-
-	uint8_t pageSize = E24_PAGE_SIZE;
-	uint16_t offset = 0;
-	uint8_t bSize = 0;
-
-	do {
-		//compute the next buffer size using nextPageAddress - addr
-		bSize = ((addr + pageSize) & ~(pageSize - 1)) - addr;
-		//avoid to overflow content length & max write buffer size
-		bSize = min(min(pageSize, bSize), length);
-
-		length -= internalWrite(addr, data + offset, bSize);
-		addr += bSize;
-		offset += bSize;
-
-	}while(length > 0);
-
-	return offset;
-}
-
-int E24::burstRead(uint16_t addr, uint8_t* data, uint16_t length)
-{
-	uint8_t pageSize = E24_PAGE_SIZE;
-	uint16_t offset = 0;
-	uint8_t bSize = 0;
-
-	do {
-		//avoid to overflow max read buffer size
-		bSize = min(pageSize, length);
-
-		length -= internalRead(addr, data + offset, bSize);
-		addr += bSize;
-		offset += bSize;
-
-	}while(length > 0);
 
 	return offset;
 }
@@ -109,7 +67,21 @@ uint8_t E24::read(uint16_t addr)
 
 int E24::read(uint16_t addr, uint8_t* data, uint16_t length)
 {
-	return burstRead(addr, data, length);
+	uint8_t pageSize = E24_PAGE_SIZE;
+	uint16_t offset = 0;
+	uint8_t bSize = 0;
+
+	do {
+		//avoid to overflow max read buffer size
+		bSize = min(pageSize, length);
+
+		length -= sequentialRead(addr, data + offset, bSize);
+		addr += bSize;
+		offset += bSize;
+
+	} while (length > 0);
+
+	return offset;
 }
 
 void E24::write(uint16_t addr, uint8_t data)
@@ -124,8 +96,26 @@ void E24::write(uint16_t addr, uint8_t data)
 	delay(E24_PAGE_WRITE_CYCLE);
 }
 
-int E24::write(uint16_t addr, uint8_t* data, uint16_t length)
+int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 {
-	return burstWrite(addr, data, length);
+	if (addr + length - 1 > E24_MAX_ADDRESS) return -1;
+
+	uint8_t pageSize = E24_PAGE_SIZE;
+	uint16_t offset = 0;
+	uint8_t bSize = 0;
+
+	do {
+		//compute the next buffer size using nextPageAddress - addr
+		bSize = ((addr + pageSize) & ~(pageSize - 1)) - addr;
+		//avoid to overflow content length & max write buffer size
+		bSize = min(min(pageSize, bSize), length);
+
+		length -= sequentialWrite(addr, data + offset, bSize);
+		addr += bSize;
+		offset += bSize;
+
+	} while (length > 0);
+
+	return offset;
 }
 
