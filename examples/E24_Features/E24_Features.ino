@@ -3,8 +3,8 @@
 #include <E24.h>
 #include <Wire.h>
 
-#define E24_ADDR 0x50
-E24 e24 = E24(E24Size_t::E24_256K, E24_ADDR);
+E24Size_t size = E24Size_t::E24_256K;
+E24 e24 = E24(size, E24_DEFAULT_ADDR);
 
 bool testChar(unsigned short addr, char assertValue)
 {
@@ -257,7 +257,7 @@ bool testBlock()
 
 bool testSize()
 {
-	unsigned short addr = E24_MAXADRESS;
+	unsigned short addr = (static_cast<uint16_t>(1 << static_cast<uint8_t>(size)) * 1024) - 1;
 	byte data[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	bool success = true;
 	if(e24.write(addr, data, 2) == -1)
