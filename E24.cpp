@@ -1,16 +1,14 @@
 #include "E24.h"
 
-
-#define E24_MAX_ADDRESS			(static_cast<uint16_t>(1 << static_cast<uint8_t>(_size)) * 1024) - 1
-#define E24_PAGE_SIZE			(static_cast<uint8_t>(1 << ((static_cast<uint8_t>(_size) + 2) / 2)) * 8)
 #define E24_PAGE_WRITE_CYCLE	5
 
 #define WRITE_BUFFER_SIZE		E24_PAGE_SIZE
 #define READ_BUFFER_SIZE		E24_PAGE_SIZE
 
-E24::E24(E24Size_t size, uint8_t deviceAddr)
+E24::E24(E24Size_t size, uint8_t deviceAddr = E24_DEFAULT_ADDR)
 {
 	_deviceAddr = deviceAddr;
+	_size = size;
 }
 
 E24::~E24() {}
@@ -67,7 +65,7 @@ uint8_t E24::read(uint16_t addr)
 
 int E24::read(uint16_t addr, uint8_t* data, uint16_t length)
 {
-	uint8_t pageSize = E24_PAGE_SIZE;
+	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	uint16_t offset = 0;
 	uint8_t bSize = 0;
 
@@ -98,9 +96,9 @@ void E24::write(uint16_t addr, uint8_t data)
 
 int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 {
-	if (addr + length - 1 > E24_MAX_ADDRESS) return -1;
+	if (addr + length - 1 > E24_MAX_ADDRESS(_size)) return -1;
 
-	uint8_t pageSize = E24_PAGE_SIZE;
+	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	uint16_t offset = 0;
 	uint8_t bSize = 0;
 

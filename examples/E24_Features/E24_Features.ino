@@ -3,7 +3,9 @@
 #include <E24.h>
 #include <Wire.h>
 
-E24Size_t size = E24Size_t::E24_256K;
+#define POWER_I2C A0
+
+E24Size_t size = E24Size_t::E24_512K;
 E24 e24 = E24(size, E24_DEFAULT_ADDR);
 
 bool testChar(unsigned short addr, char assertValue)
@@ -89,13 +91,20 @@ bool testString()
 	}
 	Serial.println("Data erased.");
 	Serial.println("Writing data.");
+	delay(3000);
+	Serial.println("Start.");
+	delay(1000);
 	for(int i = 0; i < len; i++)
 	{
 		e24.write(addr + i, (byte)str_data[i]);
 	}
 	
+	delay(5000);
 	Serial.println("Data written.");
 	Serial.println("Reading written data.");
+	delay(3000);
+	Serial.println("Start.");
+	delay(1000);
 	e24.read(addr, (byte*)read_data, len);
 	read_data[187] = '\0';
 
@@ -150,8 +159,8 @@ bool testString()
 
 Config defaultConfig() {
 	Config c = {
-		"Test",
-		"1.24",
+		"Tesi",
+		"1.25",
 		0,
 		16,
 		48,
@@ -298,15 +307,18 @@ bool testSize()
 
 void setup()
 {
+	digitalWrite(POWER_I2C, HIGH);
+	pinMode(POWER_I2C, OUTPUT);
+
 	Wire.begin();
 	Serial.begin(115200);
-	randomSeed(123456789);
+	randomSeed(123456710);
 	
 	bool success = true;
 	//success &= testSingleByte();
 	success &= testString();
-	success &= testBlock();
-	success &= testSize();
+	/*success &= testBlock();
+	success &= testSize();*/
 
 	if(success)
 	{
