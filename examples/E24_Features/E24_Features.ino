@@ -33,7 +33,7 @@ bool testSingleByte()
 {
 	byte rand = (byte)random(0, 256);
 	byte value;
-	unsigned short addr = (unsigned short)random(0x7FFF);
+	unsigned short addr = (unsigned short)random(E24_MAX_ADDRESS(e24.getSize()));
 
 	Serial.println("=====================================");
 	Serial.println("Testing single byte write/read...");
@@ -74,14 +74,20 @@ bool testString()
 	char str_data[]={"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nunc quam, rutrum ut nisl vitae, porta laoreet purus. Nunc eget lorem consequat, mollis magna quis, interdum erat cras amet."};	
 	char read_data[188];
 	int len = strlen(str_data);
+
+	Serial.println("Original string value : ");
+	Serial.println("=====================================");
+	Serial.println(str_data);
+	Serial.println("=====================================");
+
 	Serial.println("=====================================");
 	Serial.println("Testing arbitrary bytes write/read...");
 	Serial.print("Test string length : ");
 	Serial.println(len);
 
 	bool success = true;
-	unsigned short addr = 129;
-//	unsigned short addr = (unsigned short)random(0x7F00);
+	//uint16_t addr = 512;
+	uint16_t addr = (uint16_t)random(E24_MAX_ADDRESS(e24.getSize()));
 
 	Serial.println("Writing data one byte at a time...");
 	Serial.println("Erasing data...");
@@ -91,21 +97,20 @@ bool testString()
 	}
 	Serial.println("Data erased.");
 	Serial.println("Writing data.");
-	delay(3000);
-	Serial.println("Start.");
-	delay(1000);
 	for(int i = 0; i < len; i++)
 	{
 		e24.write(addr + i, (byte)str_data[i]);
 	}
 	
-	delay(5000);
 	Serial.println("Data written.");
-	Serial.println("Reading written data.");
-	delay(3000);
-	Serial.println("Start.");
-	delay(1000);
-	e24.read(addr, (byte*)read_data, len);
+	Serial.println("Reading written data one byte at a time.");
+	for (int i = 0; i < len; i++) {
+		Serial.print((char)e24.read(addr + i));
+	}
+	Serial.println();
+
+	Serial.println("Reading written data as a block.");
+	e24.read(addr, read_data, len);
 	read_data[187] = '\0';
 
 	Serial.println("Data read.");
@@ -137,6 +142,13 @@ bool testString()
 	Serial.println("Writing data.");
 	e24.write(addr, (byte*)str_data, len);
 	Serial.println("Data written.");
+
+	Serial.println("Reading written data one byte at a time.");
+	for (int i = 0; i < len; i++) {
+		Serial.print((char)e24.read(addr + i));
+	}
+	Serial.println();
+
 	Serial.println("Reading written data.");
 	e24.read(addr, (byte*)read_data, len);
 	Serial.println("Data read.");
@@ -266,7 +278,7 @@ bool testBlock()
 
 bool testSize()
 {
-	unsigned short addr = (static_cast<uint16_t>(1 << static_cast<uint8_t>(size)) * 1024) - 1;
+	uint16_t addr = E24_MAX_ADDRESS(e24.getSize());
 	byte data[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	bool success = true;
 	if(e24.write(addr, data, 2) == -1)
@@ -312,13 +324,15 @@ void setup()
 
 	Wire.begin();
 	Serial.begin(115200);
-	randomSeed(123456710);
+	randomSeed(12345679);
 	
+	Serial.println("Send anything to start");
+	while (!Serial.available());
 	bool success = true;
-	//success &= testSingleByte();
+	success &= testSingleByte();
 	success &= testString();
-	/*success &= testBlock();
-	success &= testSize();*/
+	//success &= testBlock();
+	//success &= testSize();
 
 	if(success)
 	{
