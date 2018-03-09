@@ -1,9 +1,8 @@
 #include "E24.h"
 
 #define E24_PAGE_WRITE_CYCLE	5
-
-#define WRITE_BUFFER_SIZE		E24_PAGE_SIZE
-#define READ_BUFFER_SIZE		E24_PAGE_SIZE
+#define WRITE_BUFFER_LENGTH		BUFFER_LENGTH - 2 //sequential write will fail if using the full TWI BUFFER_LENGTH
+#define READ_BUFFER_LENGTH		BUFFER_LENGTH
 
 E24::E24(E24Size_t size, uint8_t deviceAddr = E24_DEFAULT_ADDR)
 {
@@ -13,19 +12,19 @@ E24::E24(E24Size_t size, uint8_t deviceAddr = E24_DEFAULT_ADDR)
 
 E24::~E24() {}
 
-int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint8_t length)
+int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
 	Wire.write(lowByte(addr));
 
-	Wire.write(data, length);
+	size_t w = Wire.write(data, min(WRITE_BUFFER_LENGTH, length));
 	uint8_t r = Wire.endTransmission();
 
 	//wait until the full page is being written
 	delay(E24_PAGE_WRITE_CYCLE);
 
-	return length;
+	return w;
 }
 
 int E24::sequentialRead(uint16_t addr, uint8_t* data, uint16_t length)
@@ -37,7 +36,7 @@ int E24::sequentialRead(uint16_t addr, uint8_t* data, uint16_t length)
 	Wire.write(lowByte(addr));
 	Wire.endTransmission();
 
-	Wire.requestFrom(_deviceAddr, length);
+	Wire.requestFrom(_deviceAddr, min(READ_BUFFER_LENGTH, length));
 	while(Wire.available()) data[offset++] = Wire.read();
 
 	return offset;
@@ -66,6 +65,7 @@ uint8_t E24::read(uint16_t addr)
 int E24::read(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	uint8_t pageSize = E24_PAGE_SIZE(_size);
+	uint8_t read = 0;
 	uint16_t offset = 0;
 	uint8_t bSize = 0;
 
@@ -73,9 +73,10 @@ int E24::read(uint16_t addr, uint8_t* data, uint16_t length)
 		//avoid to overflow max read buffer size
 		bSize = min(pageSize, length);
 
-		length -= sequentialRead(addr, data + offset, bSize);
-		addr += bSize;
-		offset += bSize;
+		read = sequentialRead(addr, data + offset, bSize);
+		length -= read;
+		addr += read;
+		offset += read;
 
 	} while (length > 0);
 
@@ -96,9 +97,11 @@ void E24::write(uint16_t addr, uint8_t data)
 
 int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 {
-	if (addr + length - 1 > E24_MAX_ADDRESS(_size)) return -1;
+	uint16_t endAddress = addr + length - 1;
+	if (endAddress > E24_MAX_ADDRESS(_size) || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
 
 	uint8_t pageSize = E24_PAGE_SIZE(_size);
+	uint8_t written = 0;
 	uint16_t offset = 0;
 	uint8_t bSize = 0;
 
@@ -108,9 +111,10 @@ int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 		//avoid to overflow content length & max write buffer size
 		bSize = min(min(pageSize, bSize), length);
 
-		length -= sequentialWrite(addr, data + offset, bSize);
-		addr += bSize;
-		offset += bSize;
+		written = sequentialWrite(addr, data + offset, bSize);
+		length -= written;
+		addr += written;
+		offset += written;
 
 	} while (length > 0);
 
