@@ -19,7 +19,7 @@ int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
 	Wire.write(lowByte(addr));
 
 	size_t w = Wire.write(data, min(WRITE_BUFFER_LENGTH, length));
-	uint8_t r = Wire.endTransmission();
+	Wire.endTransmission();
 
 	//wait until the full page is being written
 	delay(E24_PAGE_WRITE_CYCLE);
