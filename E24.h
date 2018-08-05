@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#define E24_DEFAULT_ADDR			0x50
+#define E24_DEFAULT_ADDR		0x50
 #define E24_MAX_ADDRESS(size)	(static_cast<uint16_t>(1 << static_cast<uint8_t>(size)) * 1024) - 1
 #define E24_PAGE_SIZE(size)		(static_cast<uint8_t>(1 << ((static_cast<uint8_t>(size) + 2) / 2)) * 8)
 
