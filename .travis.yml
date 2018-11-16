@@ -16,9 +16,6 @@ install:
  - ln -s $PWD /usr/local/share/arduino/libraries/$LIBRARY_NAME
 script:
  - arduino --verify --board arduino:avr:uno $PWD/examples/$EXAMPLE_FILE
-group: stable
-dist: precise
-os: linux
 notifications:
   email:
     on_success: change
