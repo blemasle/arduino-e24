@@ -3,7 +3,7 @@ env:
   global:
     - ARDUINO_IDE_VERSION="1.8.5"
     - LIBRARY_NAME="E24"
-    - EXAMPLE_FILE="E24_Features.ino"
+    - EXAMPLE_FILE="E24_Features/E24_Features.ino"
 before_install:
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
   - sleep 3
