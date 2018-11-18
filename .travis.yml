@@ -3,7 +3,6 @@ env:
   global:
     - ARDUINO_IDE_VERSION="1.8.5"
     - LIBRARY_NAME="E24"
-    - EXAMPLE_FILE="E24_Features/E24_Features.ino"
 before_install:
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
   - sleep 3
@@ -15,7 +14,10 @@ before_install:
 install:
  - ln -s $PWD /usr/local/share/arduino/libraries/$LIBRARY_NAME
 script:
- - arduino --verify --board arduino:avr:uno $PWD/examples/$EXAMPLE_FILE
+ - arduino --verify --board arduino:avr:uno $PWD/examples/Block/Block.ino
+ - arduino --verify --board arduino:avr:uno $PWD/examples/Buffer/Buffer.ino
+ - arduino --verify --board arduino:avr:uno $PWD/examples/Single/Single.ino
+ - arduino --verify --board arduino:avr:uno $PWD/examples/Tests/Tests.ino
 notifications:
   email:
     on_success: change
