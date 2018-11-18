@@ -1,9 +1,24 @@
-#include "E24_Features.h"
+/***
+ * This example purpose is to test the library by writing data using several modes
+ * and asserting that the read back data is identical.
+ * 
+ * It is neither pretty nor optimum, and is only meant as a debugging tool.
+ */
 
 #include <E24.h>
 #include <Wire.h>
 
 #define POWER_I2C A0
+
+struct Config {
+	char seed[5]; 
+	char version[5];
+	byte rxChannel;
+	byte txChannel;
+	byte lastUsedPatch;
+	byte lcdContrast;
+	byte patches[128];
+};
 
 E24Size_t size = E24Size_t::E24_512K;
 E24 e24 = E24(size, E24_DEFAULT_ADDR);
@@ -52,7 +67,6 @@ bool testSingleByte()
 	Serial.print(addr, HEX);
 
 	value = e24.read(addr);
-	//value = rand;
 
 	Serial.print(" : ");
 	Serial.print(value, HEX);
@@ -86,7 +100,6 @@ bool testString()
 	Serial.println(len);
 
 	bool success = true;
-	//uint16_t addr = 512;
 	uint16_t addr = (uint16_t)random(E24_MAX_ADDRESS(e24.getSize()));
 
 	Serial.println("Writing data one byte at a time...");
@@ -331,8 +344,8 @@ void setup()
 	bool success = true;
 	success &= testSingleByte();
 	success &= testString();
-	//success &= testBlock();
-	//success &= testSize();
+	success &= testBlock();
+	success &= testSize();
 
 	if(success)
 	{
