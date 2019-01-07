@@ -12,7 +12,7 @@ E24::E24(E24Size_t size, uint8_t deviceAddr = E24_DEFAULT_ADDR)
 
 E24::~E24() {}
 
-int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
+uint16_t E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -27,7 +27,7 @@ int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
 	return w;
 }
 
-int E24::sequentialRead(uint16_t addr, uint8_t* data, uint16_t length)
+uint16_t E24::sequentialRead(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	uint8_t offset = 0;
 
@@ -62,7 +62,7 @@ uint8_t E24::read(uint16_t addr)
 	return Wire.read();
 }
 
-int E24::read(uint16_t addr, uint8_t* data, uint16_t length)
+uint16_t E24::read(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	uint8_t read = 0;
@@ -95,12 +95,13 @@ void E24::write(uint16_t addr, uint8_t data)
 	delay(E24_PAGE_WRITE_CYCLE);
 }
 
-int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
+uint16_t E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 {
 	uint16_t endAddress = addr + length - 1;
-	if (endAddress > E24_MAX_ADDRESS(_size) || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
-
 	uint8_t pageSize = E24_PAGE_SIZE(_size);
+	
+	if (endAddress > pageSize || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
+
 	uint8_t written = 0;
 	uint16_t offset = 0;
 	uint8_t bSize = 0;
@@ -120,4 +121,36 @@ int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 
 	return offset;
 }
+
+uint16_t E24::fill(uint16_t addr, uint8_t data, uint16_t length) 
+{
+	uint16_t endAddress = addr + length - 1;
+	uint8_t pageSize = E24_PAGE_SIZE(_size);
+	
+	if (endAddress > pageSize || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
+
+	uint16_t offset = 0;
+	uint8_t subLength = 0;
+
+	do {
+		//compute the page stop using nextPageAddress - addr
+		subLength = ((addr + pageSize) & ~(pageSize - 1)) - addr;
+
+		Wire.beginTransmission(_deviceAddr);
+		Wire.write(highByte(addr));
+		Wire.write(lowByte(addr));
+
+		do {
+			Wire.write(data);
+			offset += 1;
+		} while (--subLength);
+
+		Wire.endTransmission();
+		//wait until the full page is being written
+		delay(E24_PAGE_WRITE_CYCLE);
+	} while (length > 0);
+
+	return offset;
+}
+
 

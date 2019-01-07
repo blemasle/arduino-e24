@@ -24,8 +24,8 @@ private:
 	uint8_t _deviceAddr;
 	E24Size_t _size;
 
-	int sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length);
-	int sequentialRead(uint16_t addr, uint8_t* data, uint16_t length);
+	uint16_t sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length);
+	uint16_t sequentialRead(uint16_t addr, uint8_t* data, uint16_t length);
 public:
 	E24(E24Size_t size, uint8_t addr = E24_DEFAULT_ADDR);
 	~E24();
@@ -34,17 +34,19 @@ public:
 
 	uint8_t read();
 	uint8_t read(uint16_t addr);
-	int read(uint16_t addr, uint8_t* data, uint16_t length);
+	uint16_t read(uint16_t addr, uint8_t* data, uint16_t length);
 
 	void write(uint16_t addr, uint8_t data);
-	int write(uint16_t addr, const uint8_t* data, uint16_t length);
+	uint16_t write(uint16_t addr, const uint8_t* data, uint16_t length);
 
-	template <typename T> int readBlock(uint16_t addr, T& data)
+	uint16_t fill(uint16_t addr, uint8_t data, uint16_t length);
+
+	template <typename T> uint16_t readBlock(uint16_t addr, T& data)
 	{
 		return read(addr, (uint8_t*)&data, sizeof(data));
 	}
 
-	template <typename T> int writeBlock(uint16_t addr, const T& data)
+	template <typename T> uint16_t writeBlock(uint16_t addr, const T& data)
 	{
 		return write(addr, (const uint8_t*)&data, sizeof(data));
 	}
