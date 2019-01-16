@@ -98,10 +98,10 @@ void E24::write(uint16_t addr, uint8_t data)
 uint16_t E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 {
 	uint16_t endAddress = addr + length - 1;
-	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	
-	if (endAddress > pageSize || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
+	if (endAddress >  E24_MAX_ADDRESS(_size) || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
 
+	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	uint8_t written = 0;
 	uint16_t offset = 0;
 	uint8_t bSize = 0;
@@ -125,30 +125,31 @@ uint16_t E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 uint16_t E24::fill(uint16_t addr, uint8_t data, uint16_t length) 
 {
 	uint16_t endAddress = addr + length - 1;
-	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	
-	if (endAddress > pageSize || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
+	if (endAddress > E24_MAX_ADDRESS(_size) || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
 
+	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	uint16_t offset = 0;
 	uint8_t subLength = 0;
 
 	do {
 		//compute the page stop using nextPageAddress - addr
 		subLength = ((addr + pageSize) & ~(pageSize - 1)) - addr;
+		subLength = min(min(min(pageSize, subLength), length), WRITE_BUFFER_LENGTH);
 
 		Wire.beginTransmission(_deviceAddr);
 		Wire.write(highByte(addr));
 		Wire.write(lowByte(addr));
 
-		do {
-			Wire.write(data);
-			offset += 1;
-		} while (--subLength);
+		for(uint8_t i = 0; i < subLength; i++) Wire.write(data);
+		length -= subLength;
+		addr += subLength;
+		offset += subLength;
 
 		Wire.endTransmission();
 		//wait until the full page is being written
 		delay(E24_PAGE_WRITE_CYCLE);
-	} while (length > 0);
+	} while(length > 0);
 
 	return offset;
 }
