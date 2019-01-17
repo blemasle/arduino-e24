@@ -12,7 +12,7 @@ E24::E24(E24Size_t size, uint8_t deviceAddr = E24_DEFAULT_ADDR)
 
 E24::~E24() {}
 
-int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
+uint16_t E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
 {
 	Wire.beginTransmission(_deviceAddr);
 	Wire.write(highByte(addr));
@@ -27,7 +27,7 @@ int E24::sequentialWrite(uint16_t addr, const uint8_t* data, uint16_t length)
 	return w;
 }
 
-int E24::sequentialRead(uint16_t addr, uint8_t* data, uint16_t length)
+uint16_t E24::sequentialRead(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	uint8_t offset = 0;
 
@@ -62,7 +62,7 @@ uint8_t E24::read(uint16_t addr)
 	return Wire.read();
 }
 
-int E24::read(uint16_t addr, uint8_t* data, uint16_t length)
+uint16_t E24::read(uint16_t addr, uint8_t* data, uint16_t length)
 {
 	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	uint8_t read = 0;
@@ -95,10 +95,11 @@ void E24::write(uint16_t addr, uint8_t data)
 	delay(E24_PAGE_WRITE_CYCLE);
 }
 
-int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
+uint16_t E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 {
 	uint16_t endAddress = addr + length - 1;
-	if (endAddress > E24_MAX_ADDRESS(_size) || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
+	
+	if (endAddress >  E24_MAX_ADDRESS(_size) || endAddress < addr) return -1; //endAddress < addr == overlap => > E24_MAX_ADDRESS for 512k chip
 
 	uint8_t pageSize = E24_PAGE_SIZE(_size);
 	uint8_t written = 0;
@@ -120,4 +121,29 @@ int E24::write(uint16_t addr, const uint8_t* data, uint16_t length)
 
 	return offset;
 }
+
+//at the cost of the local buffer, this version allows to reuse the write implementation
+//and can erase the whole chip in one call if needed.
+uint16_t E24::fill(uint16_t addr, uint8_t data, uint16_t length) 
+{
+	uint8_t buffer[WRITE_BUFFER_LENGTH];
+	uint16_t written = 0;
+	uint16_t offset = 0;
+	uint8_t bSize = 0;
+
+	memset(buffer, data, WRITE_BUFFER_LENGTH);
+
+	do {
+		bSize = min(WRITE_BUFFER_LENGTH, length);
+		written = write(addr, buffer, bSize);
+		if(written == -1) break;
+
+		length -= written,
+		addr += written;
+		offset += written;
+	} while(length > 0);
+
+	return offset;
+}
+
 
