@@ -231,6 +231,9 @@ void info() {
 	Log.notice(S_F("address\t: %X" NL), E24_DEFAULT_ADDR);
 	Log.notice(S_F("size\t\t: %d" NL), e24.getSize());
 	Log.notice(S_F("page size\t: %d" NL), E24_P_SIZE);
+	Log.notice(S_F("page count\t: ")); Serial.println(E24_MAX_ADDR / E24_P_SIZE);
+	Log.notice(S_F("max address\t: ")); Serial.println(E24_MAX_ADDR, HEX);
+
 }
 
 void reset() {
