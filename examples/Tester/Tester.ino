@@ -157,68 +157,56 @@ char *p2dig(uint16_t v, uint8_t mode, uint8_t n = 2) {
 }
 
 void showContent(uint16_t addr, uint16_t length) {
-#define TABLE_WIDTH	16
+	#define TABLE_WIDTH 16
 
-	uint16_t read = 0;
-	uint16_t j, k, regCount, lineStart = 0;
-	uint8_t buf[E24_P_SIZE];
-	uint16_t end = start + length;
+	uint16_t lineStart = 0;
+	uint8_t buf[TABLE_WIDTH];
+	uint16_t i, j, read = 0;
 
+	uint16_t end = addr + length;
 	if(end < addr) end = E24_MAX_ADDR;
 
 	//header
-	PRINT(NL);
-	PRINT("Offset ");
-	for (uint8_t i = 0; i < TABLE_WIDTH; i++) {
+	PRINT(NL "Offset ");
+	for(i = 0; i < TABLE_WIDTH; i++) {
 		Serial.print(p2dig(i, HEX));
 		PRINT(" ");
 	}
 
-	for (uint16_t i = start; i < end && i >= start; i += read) { // i < start => reached the end of the chip
+	for(i = addr; i < end && i >= addr; i += read) {
+		lineStart = (i / TABLE_WIDTH) * TABLE_WIDTH;
+		read = e24.read(i, buf, min(end, lineStart + TABLE_WIDTH) - i);
+
 		//new line with address
 		PRINT(NL);
-		lineStart = (i / TABLE_WIDTH) * TABLE_WIDTH;
 		Serial.print(p2dig(lineStart, HEX, 4));
-		PRINT(":  ");
+		PRINT(" : ");
 
-		//padding
-		for (j = 0; j < i - lineStart; j++) {
-			PRINT("   ");
-		}
-
-		read = e24.read(i, buf, min(end, lineStart + TABLE_WIDTH) - i);
 		//data
-		for (j = 0; j < read; j++) {
-			if (regCount < E24_MAX_ADDR) {
-				PRINT("");
-				Serial.print(p2dig(buf[j], HEX));
-				PRINT(" ");
-				k = j; // save this index for the next loop
-				regCount++;
+		for(j = 0; j < TABLE_WIDTH; j++) {
+			//padding
+			if(j < i - lineStart || j > (i + read) - lineStart) PRINT("  ");
+			else {
+				Serial.print(p2dig(buf[j], HEX, 2));
 			}
-			else PRINT("   ");
+			PRINT(" ");
 		}
 
-		//padding
-		for (;j < TABLE_WIDTH; j++) {
-			PRINT("   ");
-		}
-
-		//data as char
-		PRINT("  ");
-		for (j = 0; j <= k; j++) {
-			if (isalnum(buf[j]) || ispunct(buf[j])) {
-				PRINT("");
-				Serial.print((char)buf[j]);
+		//ascii data
+		for(j = 0; j < TABLE_WIDTH; j++) {
+			//padding
+			if(j < i - lineStart || j > (i + read) - lineStart) PRINT("  ");
+			//data
+			else {
+				if (isalnum(buf[j]) || ispunct(buf[j])) Serial.print((char)buf[j]);
+				else PRINT(".");
 			}
-			else PRINT(".");
 			PRINT(" ");
 		}
 	}
 
 	PRINT(NL);
 	PRINT(NL);
-
 }
 
 void unrecognized() {
@@ -237,13 +225,20 @@ void info() {
 }
 
 void reset() {
-	uint16_t addr = 0;
-
 	Log.notice(S_F("Erasing the whole chip" NL));
-	do {
-		addr += e24.fill(addr, 0, E24_P_SIZE);
+
+	for(uint16_t page = 0; page < E24_MAX_ADDR / E24_P_SIZE; page++) {
+		e24.fill(page * E24_P_SIZE, 0, E24_P_SIZE);
+		if (page % 16 == 0) {
+			PRINT(NL);
+			Serial.print(p2dig(page, DEC, 4));
+			PRINT(" : ");
+		}
+
 		Serial.print('.');		
-	} while (addr < E24_MAX_ADDR);
+	}
+
+	PRINT(NL);
 }
 
 void fill() {
