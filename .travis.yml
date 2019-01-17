@@ -17,7 +17,7 @@ script:
  - arduino --verify --board arduino:avr:uno $PWD/examples/Block/Block.ino
  - arduino --verify --board arduino:avr:uno $PWD/examples/Buffer/Buffer.ino
  - arduino --verify --board arduino:avr:uno $PWD/examples/Single/Single.ino
- - arduino --verify --board arduino:avr:uno $PWD/examples/Tests/Tests.ino
+ - arduino --verify --board arduino:avr:uno $PWD/examples/Tester/Tester.ino
 notifications:
   email:
     on_success: change
