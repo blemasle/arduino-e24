@@ -242,31 +242,33 @@ void reset() {
 
 void fill() {
 	uint16_t addr;
+	uint8_t value;
+	uint16_t written;
 	bool last = readNext();
 
 	if(BUFFER_IS_P(RANGE)) {
 		uint16_t length;
-		uint8_t value;
 
 		readNextInt(&addr);
 		readNextInt(&length);
 		readNextByte(&value);
 
-		e24.fill(addr, value, length);
+		written = e24.fill(addr, value, length);
 	}
 	else if(BUFFER_IS_P(PAGE)) {
-		uint8_t value;
 		
 		readNextInt(&addr);
 		readNextByte(&value);
 
 		addr *= E24_P_SIZE;
-		e24.fill(addr, value, E24_P_SIZE);
+		written = e24.fill(addr, value, E24_P_SIZE);
 	}
 	else {
 		unrecognized();
 		return;
 	}
+
+	Log.notice(S_F("Filled %d bytes @ %X with %d" NL), written, addr, value);
 }
 
 void read() {
@@ -278,7 +280,7 @@ void read() {
 
 		readNextInt(&addr);
 		value = e24.read(addr);
-		Log.notice(S_F("Read @%X : %X" NL), addr, value);
+		Log.notice(S_F("Read @ %X : %X" NL), addr, value);
 	}
 	else if(BUFFER_IS_P(RANGE)) {
 		uint16_t length;
@@ -318,6 +320,7 @@ void read() {
 
 void write() {
 	uint16_t addr;
+	uint16_t written;
 	readNext();
 
 	if(BUFFER_IS_P(SINGLE)) {
@@ -334,7 +337,8 @@ void write() {
         PRINT("[value] ?");
 		readNext(true);
 		
-		e24.write(addr, buffer, strlen(buffer));
+		written = e24.write(addr, buffer, strlen(buffer));
+		Log.notice(S_F("Wrote %d bytes @ %X" NL), written, addr);
 	}
 	else if(BUFFER_IS("BLOCK")) {
 		block_t b;
@@ -354,13 +358,14 @@ void write() {
 		readNext(true);
 		memcpy(b.data, buffer, DATA_SIZE);
 
-		e24.writeBlock(addr, b);
-
+		written = e24.writeBlock(addr, b);
+		Log.notice(S_F("Wrote %d bytes @ %X" NL), written, addr);
 	}
 	else {
 		unrecognized();
 		return;
 	}
+
 }
 
 void setup() {
