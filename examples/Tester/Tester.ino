@@ -11,7 +11,7 @@
 #define POWER_I2C		A0						///< pin used to deliver power to the 24LC chip on my test circuit
 #define E24_SIZE    	E24Size_t::E24_512K		///< size of the 24LC chip
 #define E24_P_SIZE		E24_PAGE_SIZE(E24_SIZE)	///< size of a page of the 24LC
-#define E24_MAX_ADDR E24_MAX_ADDRESS(E24_SIZE)
+#define E24_MAX_ADDR 	E24_MAX_ADDRESS(E24_SIZE)
 
 #define SERIAL_BAUDRATE 38400		   			///< controls the serial baudrate between the arduino and the computer
 #define BUFFER_SIZE 128 						///< size of the reading buffer on the main program side
@@ -156,13 +156,16 @@ char *p2dig(uint16_t v, uint8_t mode, uint8_t n = 2) {
 	return s;
 }
 
-void showContent(uint16_t start, uint16_t end) {
+void showContent(uint16_t addr, uint16_t length) {
 #define TABLE_WIDTH	16
 
 	uint16_t read = 0;
 	uint16_t j, k, regCount, lineStart = 0;
 	uint8_t buf[E24_P_SIZE];
-	
+	uint16_t end = start + length;
+
+	if(end < addr) end = E24_MAX_ADDR;
+
 	//header
 	PRINT(NL);
 	PRINT("Offset ");
@@ -171,7 +174,7 @@ void showContent(uint16_t start, uint16_t end) {
 		PRINT(" ");
 	}
 
-	for (uint16_t i = start; i < end; i += read) {
+	for (uint16_t i = start; i < end && i >= start; i += read) { // i < start => reached the end of the chip
 		//new line with address
 		PRINT(NL);
 		lineStart = (i / TABLE_WIDTH) * TABLE_WIDTH;
@@ -287,13 +290,13 @@ void read() {
 
 		readNextInt(&addr);
 		readNextInt(&length);
-		showContent(addr, addr + length);
+		showContent(addr, length);
 	}
 	else if(BUFFER_IS_P(PAGE)) {
 		readNextInt(&addr);
 
 		addr *= E24_P_SIZE;
-		showContent(addr, addr + E24_P_SIZE);
+		showContent(addr, E24_P_SIZE);
 	}
 	else if (BUFFER_IS_P(BLOCK)) {
 		block_t value;
